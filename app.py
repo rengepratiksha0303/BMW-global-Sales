@@ -10,7 +10,7 @@ st.title("🚗 BMW Global Sales Prediction App")
 st.write("Predict BMW Units Sold using ML Models (KNN, ANN, CNN)")
 
 # Load models
-knn = pickle.load(open("knn_MODEL.pkl","rb"))
+knn = pickle.load(open("knn_MODEL .pkl","rb"))
 ann = load_model("ann_model.h5")
 cnn = load_model("cnn_model.h5")
 
