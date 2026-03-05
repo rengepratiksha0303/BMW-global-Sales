@@ -6,64 +6,61 @@ import os
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.model_selection import train_test_split
 
-st.title("🚗 BMW Global Sales Prediction")
+st.title("BMW Sales Prediction")
 
-# -------------------------------
-# Load Dataset
-# -------------------------------
-df = pd.read_csv("bmw_global_sales_2018_2025.csv")
+# --------------------------------
+# Load Dataset (safe loading)
+# --------------------------------
 
-# Encode categorical columns
-df["Region"] = df["Region"].astype("category").cat.codes
-df["Model"] = df["Model"].astype("category").cat.codes
+file_path = "bmw_global_sales_2018_2025.csv"
+
+if os.path.exists(file_path):
+    df = pd.read_csv(file_path)
+else:
+    st.warning("Dataset not found. Creating sample dataset.")
+
+    df = pd.DataFrame({
+        "Year":[2018,2019,2020,2021,2022],
+        "Region":[0,1,2,0,1],
+        "Model":[0,1,2,3,4],
+        "Price":[35000,42000,50000,48000,55000],
+        "Marketing":[20000,25000,22000,30000,27000],
+        "Units_Sold":[1200,1500,1100,1800,1600]
+    })
 
 X = df.drop("Units_Sold", axis=1)
 y = df["Units_Sold"]
 
-# -------------------------------
-# Train model if file not found
-# -------------------------------
-model_path = "knn_model.pkl"
+# --------------------------------
+# Load / Train Model
+# --------------------------------
 
-if os.path.exists(model_path):
-    knn = pickle.load(open(model_path, "rb"))
+model_file = "knn_model.pkl"
+
+if os.path.exists(model_file):
+    knn = pickle.load(open(model_file,"rb"))
 else:
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.2)
 
-    knn = KNeighborsRegressor(n_neighbors=5)
-    knn.fit(X_train, y_train)
+    knn = KNeighborsRegressor(n_neighbors=3)
+    knn.fit(X_train,y_train)
 
-    pickle.dump(knn, open(model_path, "wb"))
+    pickle.dump(knn,open(model_file,"wb"))
 
-# -------------------------------
-# User Inputs
-# -------------------------------
-year = st.number_input("Year", 2018, 2030)
-region = st.selectbox("Region", ["Asia", "Europe", "North America"])
-model = st.selectbox("Model", ["BMW X1", "BMW X3", "BMW X5", "BMW 3 Series", "BMW 5 Series"])
+# --------------------------------
+# User Input
+# --------------------------------
+
+year = st.number_input("Year",2018,2030)
+region = st.number_input("Region Code (0-Asia,1-Europe,2-USA)")
+model = st.number_input("Model Code (0-4)")
 price = st.number_input("Price")
 marketing = st.number_input("Marketing Spend")
 
-# Encoding input
-region_map = {"Asia":0, "Europe":1, "North America":2}
-model_map = {
-    "BMW X1":0,
-    "BMW X3":1,
-    "BMW X5":2,
-    "BMW 3 Series":3,
-    "BMW 5 Series":4
-}
+features = np.array([[year,region,model,price,marketing]])
 
-region = region_map[region]
-model = model_map[model]
-
-features = np.array([[year, region, model, price, marketing]])
-
-# -------------------------------
-# Prediction
-# -------------------------------
 if st.button("Predict Sales"):
 
     prediction = knn.predict(features)
 
-    st.success(f"Predicted BMW Units Sold: {int(prediction[0])}")
+    st.success(f"Predicted Units Sold: {int(prediction[0])}")
